@@ -49,6 +49,22 @@ algorithm). There are a few examples in the unit tests
 See the JavaDocs or source code for more specific information on usage. The
 preferred approach is to use the builder to generate and execute the tasks.
 
+## Dependency Information
+
+Found on Maven Central (http://search.maven.org)
+
+Gradle:
+
+    compile 'me.ccampo:exponential-backoff:1.0.0'
+    
+Maven:
+
+    <dependency>
+      <groupId>me.ccampo</groupId>
+      <artifactId>exponential-backoff</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
 ## Development
 
 To build (OS X or -nix)
