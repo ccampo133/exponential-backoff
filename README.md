@@ -30,21 +30,23 @@ some amount of time between the next execution (determined by the backoff
 algorithm). There are a few examples in the unit tests
 `ExponentialBackOffTest.java`, however the general usage is as follows:
 
-    final BackOffResult<String> result = ExponentialBackOff.<String>builder()
-            .withBase(100)
-            .withCap(5000)
-            .withMaxAttempts(5)
-            .withJitter()
-            .withTask(() -> "Do something")
-            .retryIf(result -> result.equals("retry"))
-            .withExceptionHandler(e -> System.out.println("Do something with " + e))
-            .execute();
-            
-    if (result.status == BackOffResult.SUCCESSFUL) {
-        System.out.println("All done! Returned " + result.data.orElse("empty"));
-    } else {
-        System.out.println("Failed to complete task within 5 attempts");
-    }
+```java
+final BackOffResult<String> result = ExponentialBackOff.<String>builder()
+        .withBase(100)
+        .withCap(5000)
+        .withMaxAttempts(5)
+        .withJitter()
+        .withTask(() -> "Do something")
+        .retryIf(result -> result.equals("retry"))
+        .withExceptionHandler(e -> System.out.println("Do something with " + e))
+        .execute();
+        
+if (result.status == BackOffResult.SUCCESSFUL) {
+    System.out.println("All done! Returned " + result.data.orElse("empty"));
+} else {
+    System.out.println("Failed to complete task within 5 attempts");
+}
+```
 
 See the JavaDocs or source code for more specific information on usage. The
 preferred approach is to use the builder to generate and execute the tasks.
