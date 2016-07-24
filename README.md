@@ -1,5 +1,7 @@
 # exponential-backoff
 
+[![Build Status](https://travis-ci.org/ccampo133/exponential-backoff.svg?branch=master)](https://travis-ci.org/ccampo133/exponential-backoff)
+
 A small Java API for running arbitrary tasks with exponential backoff
 
 ## Usage
