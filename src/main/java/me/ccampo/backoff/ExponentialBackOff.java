@@ -1,5 +1,6 @@
 package me.ccampo.backoff;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -84,6 +85,7 @@ public class ExponentialBackOff<T> {
         return execute(attempt -> attempt < maxAttempts);
     }
 
+    @NotNull
     private BackOffResult<T> execute(@NotNull final Predicate<Integer> predicate) {
         int attempt = 0;
         do {
@@ -103,19 +105,22 @@ public class ExponentialBackOff<T> {
 
     private void doWait(final int attempt) {
         try {
-            final long waitTime = jitter ? getWaitTimeWithJitter(attempt) : getWaitTime(attempt);
+            final long waitTime = jitter ? getWaitTimeWithJitter(cap, base, attempt) : getWaitTime(cap, base, attempt);
             Thread.sleep(waitTime);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private long getWaitTime(final long n) {
-        return Math.min(cap, (long) Math.pow(2, n) * base);
+    @Contract(pure = true)
+    protected static long getWaitTime(final long cap, final long base, final long n) {
+        // Bitwise AND to avoid overflow; in the case of overflows, just start over from 0
+        return Math.min(cap, ((long) Math.pow(2, n & Long.MAX_VALUE) * base) & Long.MAX_VALUE);
     }
 
-    private long getWaitTimeWithJitter(final long n) {
-        return ThreadLocalRandom.current().nextLong(0, getWaitTime(n));
+    @Contract(pure = true)
+    protected static long getWaitTimeWithJitter(final long cap, final long base, final long n) {
+        return ThreadLocalRandom.current().nextLong(0, getWaitTime(cap, base, n));
     }
 
     public static final class Builder<T> {
@@ -152,6 +157,7 @@ public class ExponentialBackOff<T> {
         /**
          * The max wait time, in milliseconds, of the back off.
          */
+        @NotNull
         public Builder<T> withCap(final long cap) {
             this.cap = cap;
             return this;
@@ -160,6 +166,7 @@ public class ExponentialBackOff<T> {
         /**
          * The base wait time, in milliseconds, of the back off.
          */
+        @NotNull
         public Builder<T> withBase(final long base) {
             this.base = base;
             return this;
@@ -168,6 +175,7 @@ public class ExponentialBackOff<T> {
         /**
          * The maximum number of attempts performed in the back off.
          */
+        @NotNull
         public Builder<T> withMaxAttempts(final int maxAttempts) {
             this.maxAttempts = maxAttempts;
             return this;
@@ -177,6 +185,7 @@ public class ExponentialBackOff<T> {
          * Call to enable infinite retry attempts until there is a successful
          * response.
          */
+        @NotNull
         public Builder<T> withInfiniteAttemps() {
             this.infinite = true;
             return this;
@@ -185,6 +194,7 @@ public class ExponentialBackOff<T> {
         /**
          * Enable to introduce randomness (jitter) to the back off wait time.
          */
+        @NotNull
         public Builder<T> withJitter() {
             this.jitter = true;
             return this;
@@ -194,6 +204,7 @@ public class ExponentialBackOff<T> {
          * The task to perform, which will be retried with backoff if it
          * encounters any unhandled exceptions.
          */
+        @NotNull
         public Builder<T> withTask(@NotNull final Callable<T> task) {
             this.task = Objects.requireNonNull(task);
             return this;
@@ -205,6 +216,7 @@ public class ExponentialBackOff<T> {
          * however this gives you an place to do various things like logging the
          * exception, updating your application state, etc.
          */
+        @NotNull
         public Builder<T> withExceptionHandler(@NotNull final Consumer<Exception> exceptionHandler) {
             this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
             return this;
@@ -216,6 +228,7 @@ public class ExponentialBackOff<T> {
          * argument to this function is the return value (of type {@link T}) of
          * the previous attempt.
          */
+        @NotNull
         public Builder<T> retryIf(@NotNull final Predicate<T> retryIf) {
             this.retryIf = Objects.requireNonNull(retryIf);
             return this;
