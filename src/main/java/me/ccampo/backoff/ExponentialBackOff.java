@@ -37,13 +37,14 @@ import java.util.function.Predicate;
  */
 public class ExponentialBackOff<T> {
 
-    private static final int DEFAULT_MAX_ATTEMPTS = 10;
-    private static final long DEFAULT_WAIT_CAP_MILLIS = 60000;
-    private static final long DEFAULT_WAIT_BASE_MILLIS = 100;
+    protected static final int DEFAULT_MAX_ATTEMPTS = 10;
+    protected static final long DEFAULT_WAIT_CAP_MILLIS = 60000;
+    protected static final long DEFAULT_WAIT_BASE_MILLIS = 100;
 
     private final long cap;
     private final long base;
     private final int maxAttempts;
+    private final boolean infinite;
     private final boolean jitter;
     private final Callable<T> task;
     private final Consumer<Exception> exceptionHandler;
@@ -53,12 +54,14 @@ public class ExponentialBackOff<T> {
             final long base,
             final int maxAttempts,
             final boolean jitter,
+            final boolean infinite,
             @NotNull final Callable<T> task,
             @NotNull final Consumer<Exception> exceptionHandler,
             @NotNull final Predicate<T> retryIf) {
         this.cap = cap;
         this.base = base;
         this.maxAttempts = maxAttempts;
+        this.infinite = infinite;
         this.jitter = jitter;
         this.task = Objects.requireNonNull(task);
         this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
@@ -75,6 +78,13 @@ public class ExponentialBackOff<T> {
      */
     @NotNull
     public BackOffResult<T> execute() {
+        if (infinite) {
+            return execute(attempt -> true);
+        }
+        return execute(attempt -> attempt < maxAttempts);
+    }
+
+    private BackOffResult<T> execute(@NotNull final Predicate<Integer> predicate) {
         int attempt = 0;
         do {
             try {
@@ -87,7 +97,7 @@ public class ExponentialBackOff<T> {
                 exceptionHandler.accept(e);
                 doWait(attempt);
             }
-        } while (attempt++ < maxAttempts);
+        } while (predicate.test(attempt++));
         return new BackOffResult<>(BackOffResultStatus.EXCEEDED_MAX_ATTEMPTS);
     }
 
@@ -112,6 +122,7 @@ public class ExponentialBackOff<T> {
         private long cap = DEFAULT_WAIT_CAP_MILLIS;
         private long base = DEFAULT_WAIT_BASE_MILLIS;
         private int maxAttempts = DEFAULT_MAX_ATTEMPTS;
+        private boolean infinite = false;
         private boolean jitter = false;
         private Callable<T> task = () -> null;
         private Consumer<Exception> exceptionHandler = e -> {
@@ -124,7 +135,7 @@ public class ExponentialBackOff<T> {
 
         @NotNull
         public ExponentialBackOff<T> build() {
-            return new ExponentialBackOff<>(cap, base, maxAttempts, jitter, task, exceptionHandler, retryIf);
+            return new ExponentialBackOff<>(cap, base, maxAttempts, infinite, jitter, task, exceptionHandler, retryIf);
         }
 
         /**
@@ -159,6 +170,15 @@ public class ExponentialBackOff<T> {
          */
         public Builder<T> withMaxAttempts(final int maxAttempts) {
             this.maxAttempts = maxAttempts;
+            return this;
+        }
+
+        /**
+         * Call to enable infinite retry attempts until there is a successful
+         * response.
+         */
+        public Builder<T> withInfiniteAttemps() {
+            this.infinite = true;
             return this;
         }
 
