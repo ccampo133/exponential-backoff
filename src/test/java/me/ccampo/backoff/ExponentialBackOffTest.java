@@ -16,15 +16,14 @@ public class ExponentialBackOffTest {
         final long wait1 = ExponentialBackOff.getWaitTime(cap, base, Long.MAX_VALUE);
         assertThat(wait1).isEqualTo(cap);
 
-        // MIN_VALUE should be equivalent to 0; This should result in min(60000, 2^0 * 100) = 100
+        // MIN_VALUE will be capped
         final long wait2 = ExponentialBackOff.getWaitTime(cap, base, Long.MIN_VALUE);
-        assertThat(wait2).isEqualTo(base);
+        assertThat(wait2).isEqualTo(cap);
 
-        // MIN_VALUE + 1 should be equivalent to 1; This should result in min(60000, 2^1 * 100) = 200
         final long wait3 = ExponentialBackOff.getWaitTime(cap, base, Long.MIN_VALUE + 1);
-        assertThat(wait3).isEqualTo(base * 2);
+        assertThat(wait3).isEqualTo(cap);
 
-        // -1 will convert ot MAX_VALUE - 1; Should result in min(60000, 2^(MAX_VALUE -1) * 100) = 60000
+        // -1 will be capped; Should result in min(60000, 2^(MAX_VALUE -1) * 100) = 60000
         final long wait4 = ExponentialBackOff.getWaitTime(cap, base, -1);
         assertThat(wait4).isEqualTo(cap);
     }
@@ -92,7 +91,7 @@ public class ExponentialBackOffTest {
         final BackOffResult<String> result = ExponentialBackOff.<String>builder()
                 .withBase(1)
                 .withCap(10)
-                .withInfiniteAttemps()
+                .withInfiniteAttempts()
                 .withTask(() -> {
                     attempts.incrementAndGet();
                     // Just to ensure that we exceed the default max attempts

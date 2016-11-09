@@ -59,14 +59,14 @@ Found on Maven Central (http://search.maven.org)
 
 Gradle:
 
-    compile 'me.ccampo:exponential-backoff:1.1.1'
+    compile 'me.ccampo:exponential-backoff:1.1.2'
     
 Maven:
 
     <dependency>
       <groupId>me.ccampo</groupId>
       <artifactId>exponential-backoff</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
     </dependency>
 
 ## Development

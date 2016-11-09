@@ -62,8 +62,8 @@ public class ExponentialBackOff<T> {
         this.cap = cap;
         this.base = base;
         this.maxAttempts = maxAttempts;
-        this.infinite = infinite;
         this.jitter = jitter;
+        this.infinite = infinite;
         this.task = Objects.requireNonNull(task);
         this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
         this.retryIf = Objects.requireNonNull(retryIf);
@@ -80,14 +80,15 @@ public class ExponentialBackOff<T> {
     @NotNull
     public BackOffResult<T> execute() {
         if (infinite) {
-            return execute(attempt -> true);
+            return execute(attempt -> true, 0);
         }
-        return execute(attempt -> attempt < maxAttempts);
+        return execute(attempt -> attempt < maxAttempts, 0);
     }
 
+    // Protected so this can be used in testing
     @NotNull
-    private BackOffResult<T> execute(@NotNull final Predicate<Integer> predicate) {
-        int attempt = 0;
+    protected BackOffResult<T> execute(@NotNull final Predicate<Long> predicate, final long attempt) {
+        long curAttempt = attempt;
         do {
             try {
                 final T result = task.call();
@@ -99,11 +100,11 @@ public class ExponentialBackOff<T> {
                 exceptionHandler.accept(e);
                 doWait(attempt);
             }
-        } while (predicate.test(attempt++));
+        } while (predicate.test(curAttempt++));
         return new BackOffResult<>(BackOffResultStatus.EXCEEDED_MAX_ATTEMPTS);
     }
 
-    private void doWait(final int attempt) {
+    private void doWait(final long attempt) {
         try {
             final long waitTime = jitter ? getWaitTimeWithJitter(cap, base, attempt) : getWaitTime(cap, base, attempt);
             Thread.sleep(waitTime);
@@ -114,8 +115,9 @@ public class ExponentialBackOff<T> {
 
     @Contract(pure = true)
     protected static long getWaitTime(final long cap, final long base, final long n) {
-        // Bitwise AND to avoid overflow; in the case of overflows, just start over from 0
-        return Math.min(cap, ((long) Math.pow(2, n & Long.MAX_VALUE) * base) & Long.MAX_VALUE);
+        // Simple check for overflows
+        final long expWait = ((long) Math.pow(2, n)) * base;
+        return expWait <= 0 ? cap : Math.min(cap, expWait);
     }
 
     @Contract(pure = true)
@@ -140,7 +142,7 @@ public class ExponentialBackOff<T> {
 
         @NotNull
         public ExponentialBackOff<T> build() {
-            return new ExponentialBackOff<>(cap, base, maxAttempts, infinite, jitter, task, exceptionHandler, retryIf);
+            return new ExponentialBackOff<>(cap, base, maxAttempts, jitter, infinite, task, exceptionHandler, retryIf);
         }
 
         /**
@@ -186,7 +188,7 @@ public class ExponentialBackOff<T> {
          * response.
          */
         @NotNull
-        public Builder<T> withInfiniteAttemps() {
+        public Builder<T> withInfiniteAttempts() {
             this.infinite = true;
             return this;
         }
