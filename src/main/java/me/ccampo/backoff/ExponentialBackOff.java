@@ -62,8 +62,8 @@ public class ExponentialBackOff<T> {
         this.cap = cap;
         this.base = base;
         this.maxAttempts = maxAttempts;
-        this.infinite = infinite;
         this.jitter = jitter;
+        this.infinite = infinite;
         this.task = Objects.requireNonNull(task);
         this.exceptionHandler = Objects.requireNonNull(exceptionHandler);
         this.retryIf = Objects.requireNonNull(retryIf);
@@ -140,7 +140,7 @@ public class ExponentialBackOff<T> {
 
         @NotNull
         public ExponentialBackOff<T> build() {
-            return new ExponentialBackOff<>(cap, base, maxAttempts, infinite, jitter, task, exceptionHandler, retryIf);
+            return new ExponentialBackOff<>(cap, base, maxAttempts, jitter, infinite, task, exceptionHandler, retryIf);
         }
 
         /**
