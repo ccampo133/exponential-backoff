@@ -92,7 +92,7 @@ public class ExponentialBackOffTest {
         final BackOffResult<String> result = ExponentialBackOff.<String>builder()
                 .withBase(1)
                 .withCap(10)
-                .withInfiniteAttemps()
+                .withInfiniteAttempts()
                 .withTask(() -> {
                     attempts.incrementAndGet();
                     // Just to ensure that we exceed the default max attempts

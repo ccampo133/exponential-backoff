@@ -186,7 +186,7 @@ public class ExponentialBackOff<T> {
          * response.
          */
         @NotNull
-        public Builder<T> withInfiniteAttemps() {
+        public Builder<T> withInfiniteAttempts() {
             this.infinite = true;
             return this;
         }
