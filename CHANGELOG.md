@@ -1,3 +1,13 @@
+<a name="1.1.3"></a>
+## 1.1.3 (2016-12-13)
+
+
+#### Bug Fixes
+
+*   fix incorrect wait time bug ([62660695](https://github.com/ccampo133/exponential-backoff/commit/62660695569b0bbb6008b7cf6fb5e668b98e01fb))
+
+
+
 <a name="1.1.2"></a>
 ## 1.1.2 (2016-11-09)
 

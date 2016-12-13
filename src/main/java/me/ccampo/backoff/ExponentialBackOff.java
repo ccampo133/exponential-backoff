@@ -98,7 +98,7 @@ public class ExponentialBackOff<T> {
                 return new BackOffResult<>(result, BackOffResultStatus.SUCCESSFUL);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
-                doWait(attempt);
+                doWait(curAttempt);
             }
         } while (predicate.test(curAttempt++));
         return new BackOffResult<>(BackOffResultStatus.EXCEEDED_MAX_ATTEMPTS);
